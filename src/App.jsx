@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import Places from './components/Places.jsx';
 import { AVAILABLE_PLACES } from './data.js';
@@ -7,12 +7,13 @@ import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
 import { sortPlacesByDistance } from './loc.js';
 
-const selectedPlaceID = JSON.parse(
-  localStorage.getItem('selectedPlaces'))
-  .map(id => AVAILABLE_PLACES.find(i => i.id === id)) || []
+const onLocalStorage = localStorage.getItem('selectedPlaces')
+const selectedPlaceID = onLocalStorage
+  ? JSON.parse(onLocalStorage)
+    .map(id => AVAILABLE_PLACES.find(i => i.id === id))
+  : []
 
 function App() {
-  const modal = useRef();
   const selectedPlace = useRef();
   const [availablePlace, setAvailablePlace] = useState([]);
   const [pickedPlaces, setPickedPlaces] = useState(selectedPlaceID);
@@ -50,20 +51,21 @@ function App() {
       localStorage.setItem('selectedPlaces', JSON.stringify([id, ...storeIds]))
   }
 
-  function handleRemovePlace() {
-    setPickedPlaces((prevPickedPlaces) =>
-      prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
-    );
-    // modal.current.close();
-    setIsOpenModal(false)
-    const storeIds = JSON.parse(localStorage.getItem('selectedPlaces')) || []
-    localStorage.setItem('selectedPlaces', JSON.stringify(storeIds.filter(i => i !== selectedPlace.current)))
-  }
+  const handleRemovePlace = useCallback(
+    function handleRemovePlace() {
+      setPickedPlaces((prevPickedPlaces) =>
+        prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
+      );
+      // modal.current.close();
+      setIsOpenModal(false)
+      const storeIds = JSON.parse(localStorage.getItem('selectedPlaces')) || []
+      localStorage.setItem('selectedPlaces', JSON.stringify(storeIds.filter(i => i !== selectedPlace.current)))
+    }, [])
 
 
   return (
     <>
-      <Modal ref={modal} isOpenModal={isOpenModal} onClose={handleStopRemovePlace} >
+      <Modal isOpenModal={isOpenModal} onClose={handleStopRemovePlace} >
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
           onConfirm={handleRemovePlace}
