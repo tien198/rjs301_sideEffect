@@ -7,11 +7,16 @@ import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
 import { sortPlacesByDistance } from './loc.js';
 
+const selectedPlaceID = JSON.parse(
+  localStorage.getItem('selectedPlaces'))
+  .map(id => AVAILABLE_PLACES.find(i => i.id === id)) || []
+
 function App() {
   const modal = useRef();
   const selectedPlace = useRef();
   const [availablePlace, setAvailablePlace] = useState([]);
-  const [pickedPlaces, setPickedPlaces] = useState([]);
+  const [pickedPlaces, setPickedPlaces] = useState(selectedPlaceID);
+  const [isOpenModal, setIsOpenModal] = useState(false)
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition((position) => {
@@ -21,12 +26,14 @@ function App() {
   }, [])
 
   function handleStartRemovePlace(id) {
-    modal.current.open();
+    // modal.current.open();
+    setIsOpenModal(true)
     selectedPlace.current = id;
   }
 
   function handleStopRemovePlace() {
-    modal.current.close();
+    // modal.current.close();
+    setIsOpenModal(false)
   }
 
   function handleSelectPlace(id) {
@@ -47,12 +54,16 @@ function App() {
     setPickedPlaces((prevPickedPlaces) =>
       prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
     );
-    modal.current.close();
+    // modal.current.close();
+    setIsOpenModal(false)
+    const storeIds = JSON.parse(localStorage.getItem('selectedPlaces')) || []
+    localStorage.setItem('selectedPlaces', JSON.stringify(storeIds.filter(i => i !== selectedPlace.current)))
   }
+
 
   return (
     <>
-      <Modal ref={modal}>
+      <Modal ref={modal} isOpenModal={isOpenModal} onClose={handleStopRemovePlace} >
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
           onConfirm={handleRemovePlace}
